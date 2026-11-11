@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>가나 노트</title>
+<meta name="theme-color" content="#2c4a8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="가나 노트">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+KR:wght@400;600;700&display=swap">
+<style>
+:root{
+  --paper:#f6f7f9; --sheet:#ffffff; --ink:#1d2433; --muted:#5f6b80;
+  --grid:#d9dfeb; --ai:#2c4a8a; --on-ai:#ffffff; --ai-soft:#e6ecf8;
+  --ok:#2f7a4f; --ok-soft:#e3f2e9; --no:#b8402f; --no-soft:#f8e6e2;
+  --kana:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+  --body:"Noto Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#12161f; --sheet:#1a202c; --ink:#e8ecf3; --muted:#9aa6bb; --grid:#2f3849;
+  --ai:#8fa9e6; --on-ai:#12161f; --ai-soft:#24304a;
+  --ok:#6cc896; --ok-soft:#1e3328; --no:#ee8a78; --no-soft:#3a2420; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  -webkit-tap-highlight-color:transparent;display:flex;flex-direction:column}
+main{flex:1;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 18px) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{margin:0;font-size:22px;text-wrap:balance}
+h2{margin:0;font-size:16px}
+.eyebrow{font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.card{background:var(--sheet);border:1px solid var(--grid);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.muted{color:var(--muted);font-size:14px;margin:0}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.primary{border:0;border-radius:12px;padding:13px;background:var(--ai);color:var(--on-ai);font-weight:700;font-size:15px;cursor:pointer;width:100%}
+.ghost{border:1.5px solid var(--grid);border-radius:12px;padding:12px;background:var(--sheet);font-weight:600;cursor:pointer;width:100%}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{text-align:center;padding:10px 4px;border-radius:12px;background:var(--ai-soft)}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--grid);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;background:var(--sheet);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--ai);background:var(--ai-soft);color:var(--ai)}
+/* quiz */
+.meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:4px;background:var(--grid);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ai);transition:width .25s}
+.prompt{align-self:center;display:grid;place-items:center;min-width:150px;min-height:150px;padding:0 18px;
+  background-image:linear-gradient(var(--grid),var(--grid)),linear-gradient(var(--grid),var(--grid));
+  background-size:1px 100%,100% 1px;background-position:center;background-repeat:no-repeat;border:2px solid var(--grid);border-radius:6px}
+.prompt span{font-family:var(--kana);font-weight:700;font-size:84px;line-height:1;background:var(--sheet);padding:0 4px}
+.prompt.word span{font-size:52px}
+.prompt.sound span{font-family:var(--body);font-size:60px}
+.prompt.listen button{border:0;background:var(--sheet);font-size:56px;cursor:pointer;line-height:1}
+.ask{text-align:center;margin:0;color:var(--muted);font-size:14px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opts button{font-size:24px;font-weight:600;padding:14px 6px;border-radius:12px;border:1.5px solid var(--grid);background:var(--sheet);cursor:pointer;min-width:0}
+.opts button.kana{font-family:var(--kana);font-size:34px;padding:10px 6px}
+.opts button.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.opts button.no{background:var(--no-soft);border-color:var(--no);color:var(--no)}
+#self button{font-size:16px;padding:12px 6px}
+.feedback{min-height:24px;text-align:center;font-weight:600;margin:0}
+.feedback.ok{color:var(--ok)} .feedback.no{color:var(--no)}
+.score{font-size:48px;font-weight:700;font-variant-numeric:tabular-nums;margin:0;text-align:center}
+.miss{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.miss span{font-family:var(--kana);font-size:22px;padding:4px 10px;border-radius:8px;background:var(--no-soft);color:var(--no)}
+/* chart */
+.cells{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.cell{border:1px solid var(--grid);border-radius:8px;text-align:center;padding:8px 2px 6px;background:var(--sheet);cursor:pointer;position:relative}
+.cell b{display:block;font-family:var(--kana);font-size:30px;font-weight:700;line-height:1.2}
+.cell small{font-size:13px;color:var(--muted)}
+.cell.weak::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--no)}
+/* phrases */
+.phrase{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--grid)}
+.phrase:first-of-type{border-top:0}
+.phrase div{flex:1;min-width:0}
+.phrase b{font-family:var(--kana);font-size:22px;display:block}
+.phrase span{font-size:14px;color:var(--muted)}
+.say{border:1.5px solid var(--grid);background:var(--sheet);border-radius:50%;width:44px;height:44px;cursor:pointer;flex:none;display:grid;place-items:center}
+.say svg{width:20px;height:20px;fill:var(--ai)}
+/* tab bar */
+nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--sheet);border-top:1px solid var(--grid);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+nav button{border:0;background:none;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);cursor:pointer}
+nav button i{font-style:normal;font-family:var(--kana);font-size:20px;font-weight:700;line-height:1.2}
+nav button[aria-current="page"]{color:var(--ai)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main><div class="wrap" id="view"></div></main>
+<nav>
+  <button data-tab="home" aria-current="page"><i>家</i>홈</button>
+  <button data-tab="quiz"><i>問</i>퀴즈</button>
+  <button data-tab="chart"><i>あ</i>글자표</button>
+  <button data-tab="phrase"><i>話</i>표현</button>
+</nav>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "가나 노트",
+  "short_name": "가나 노트",
+  "description": "Claude 수업과 함께 쓰는 일본어 읽기·듣기·말하기 복습 앱",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#2c4a8a",
+  "lang": "ko",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
