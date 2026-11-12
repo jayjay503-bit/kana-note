@@ -78,12 +78,13 @@ const SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5
 
 /* ---------- 문제 만들기 ---------- */
 const TYPES = {
-  kana: ["readKana", "findKana", "listenKana", "speak"],
-  word: ["readWord", "listenWord", "meanWord", "speak"],
-  phrase: ["meanWord", "listenWord", "speak"]
+  kana: ["readKana", "findKana", "listenKana"],
+  word: ["readWord", "listenWord", "meanWord"],
+  phrase: ["meanWord", "listenWord"]
 };
-const SKILL = { readKana: "읽기", findKana: "읽기", readWord: "읽기", meanWord: "읽기", listenKana: "듣기", listenWord: "듣기", speak: "말하기" };
-const SKILL_TYPES = { 읽기: ["readKana", "findKana", "readWord", "meanWord"], 듣기: ["listenKana", "listenWord"], 말하기: ["speak"] };
+const SKILL = { readKana: "읽기", findKana: "읽기", readWord: "읽기", meanWord: "읽기", listenKana: "듣기", listenWord: "듣기" };
+const SKILL_TYPES = { 읽기: ["readKana", "findKana", "readWord", "meanWord"], 듣기: ["listenKana", "listenWord"] };
+const READ_RATIO = 0.8; // 종합 모드에서 읽기 문제 비율
 
 function options(answer, pool, field, nearJp) {
   const set = new Set([answer]);
@@ -98,12 +99,16 @@ function buildSession(skill, lessonIds) {
   if (!canSpeak) allowed = (allowed || Object.keys(SKILL)).filter(t => !t.startsWith("listen"));
   const n = skill === "종합" ? 15 : 12;
   const picked = weightedPick(pool.filter(it => TYPES[it.kind].some(t => !allowed || allowed.includes(t))), n);
-  // 종합 모드: 말하기가 너무 적지 않게
-  return picked.map((it, i) => {
+  // 종합 모드: 읽기 위주(약 80%), 나머지는 듣기
+  return picked.map(it => {
     let opts = TYPES[it.kind].filter(t => !allowed || allowed.includes(t));
     if (!canSpeak) opts = opts.filter(t => !t.startsWith("listen"));
-    let type = opts[Math.floor(Math.random() * opts.length)];
-    if (skill === "종합" && i % 5 === 4) type = "speak";
+    if (skill === "종합") {
+      const want = Math.random() < READ_RATIO ? "읽기" : "듣기";
+      const sub = opts.filter(t => SKILL[t] === want);
+      if (sub.length) opts = sub;
+    }
+    const type = opts[Math.floor(Math.random() * opts.length)];
     return { it, type };
   });
 }
@@ -114,7 +119,7 @@ function startSession(skill) {
   const ids = selLessons && selLessons.length ? selLessons : null;
   const q = buildSession(skill, ids);
   if (!q.length) { view.innerHTML = `<div class="card"><p class="muted">선택한 범위에 문제가 없어요.</p></div>`; return; }
-  S = { skill, queue: q, total: q.length, done: 0, right: 0, missed: new Map(), retried: new Set(), skills: { 읽기: [0, 0], 듣기: [0, 0], 말하기: [0, 0] } };
+  S = { skill, queue: q, total: q.length, done: 0, right: 0, missed: new Map(), retried: new Set(), skills: { 읽기: [0, 0], 듣기: [0, 0] } };
   ask();
 }
 
@@ -249,7 +254,7 @@ function home() {
       <div class="stat"><b>${acc}</b><span>정답률</span></div>
     </div>
     <div class="card"><h2>오늘의 복습</h2>
-      <p class="muted">읽기·듣기·말하기 15문제. 틀렸던 것과 오래 안 본 것이 더 자주 나와요. 매번 새로 섞여요.</p>
+      <p class="muted">읽기 위주에 듣기를 섞은 15문제. 틀렸던 것과 오래 안 본 것이 더 자주 나와요. 매번 새로 섞여요.</p>
       <button class="primary" id="go">복습 시작</button></div>
     ${weak.length ? `<div class="card"><h2>약한 글자·단어</h2><div class="miss">${weak.map(w => `<span>${w.jp}</span>`).join("")}</div></div>` : ""}
     <div class="card"><h2>배운 수업</h2>${L.map(l => `<p class="muted">${l.id}강 · ${esc(l.title)}</p>`).join("")}</div>`;
@@ -260,10 +265,9 @@ function quizMenu() {
   view.innerHTML = `<div><div class="eyebrow">원하는 영역만 골라서</div><h1>퀴즈</h1></div>
     <div class="card"><h2>범위</h2>${lessonChips()}</div>
     <div class="card">
-      <button class="primary" data-s="종합">종합 (읽기·듣기·말하기)</button>
+      <button class="primary" data-s="종합">종합 (읽기 + 듣기)</button>
       <button class="ghost" data-s="읽기">읽기만</button>
       ${canSpeak ? `<button class="ghost" data-s="듣기">듣기만</button>` : ""}
-      <button class="ghost" data-s="말하기">말하기만</button>
     </div>`;
   bindChips();
   view.querySelectorAll("[data-s]").forEach(b => b.onclick = () => startSession(b.dataset.s));
