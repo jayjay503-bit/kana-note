@@ -1,5 +1,5 @@
 // 새 수업이 올라오면 바로 반영되도록 네트워크 우선, 오프라인일 땐 저장본 사용
-const CACHE = "kana-note-v4";
+const CACHE = "kana-note-v5";
 const FILES = ["./", "index.html", "app.js", "data.js", "manifest.webmanifest", "icons/icon-192.png"];
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); });
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));

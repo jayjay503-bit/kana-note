@@ -84,7 +84,6 @@ const TYPES = {
 };
 const SKILL = { readKana: "읽기", findKana: "읽기", readWord: "읽기", meanWord: "읽기", listenKana: "듣기", listenWord: "듣기" };
 const SKILL_TYPES = { 읽기: ["readKana", "findKana", "readWord", "meanWord"], 듣기: ["listenKana", "listenWord"] };
-const READ_RATIO = 0.8; // 종합 모드에서 읽기 문제 비율
 
 function options(answer, pool, field, nearJp) {
   const set = new Set([answer]);
@@ -99,12 +98,12 @@ function buildSession(skill, lessonIds) {
   if (!canSpeak) allowed = (allowed || Object.keys(SKILL)).filter(t => !t.startsWith("listen"));
   const n = skill === "종합" ? 15 : 12;
   const picked = weightedPick(pool.filter(it => TYPES[it.kind].some(t => !allowed || allowed.includes(t))), n);
-  // 종합 모드: 읽기 위주(약 80%), 나머지는 듣기
-  return picked.map(it => {
+  // 종합 모드: 5문제마다 듣기 1문제(15문제 중 3개), 나머지는 읽기
+  return picked.map((it, i) => {
     let opts = TYPES[it.kind].filter(t => !allowed || allowed.includes(t));
     if (!canSpeak) opts = opts.filter(t => !t.startsWith("listen"));
     if (skill === "종합") {
-      const want = Math.random() < READ_RATIO ? "읽기" : "듣기";
+      const want = i % 5 === 2 ? "듣기" : "읽기";
       const sub = opts.filter(t => SKILL[t] === want);
       if (sub.length) opts = sub;
     }
