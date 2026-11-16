@@ -78,12 +78,12 @@ const SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5
 
 /* ---------- 문제 만들기 ---------- */
 const TYPES = {
-  kana: ["readKana", "findKana", "listenKana"],
-  word: ["readWord", "listenWord", "meanWord"],
+  kana: [], // 글자 하나짜리 문제는 내지 않고, 단어·표현으로만 출제
+  word: ["readWord", "findWord", "listenWord", "meanWord"],
   phrase: ["meanWord", "listenWord"]
 };
-const SKILL = { readKana: "읽기", findKana: "읽기", readWord: "읽기", meanWord: "읽기", listenKana: "듣기", listenWord: "듣기" };
-const SKILL_TYPES = { 읽기: ["readKana", "findKana", "readWord", "meanWord"], 듣기: ["listenKana", "listenWord"] };
+const SKILL = { readKana: "읽기", findKana: "읽기", readWord: "읽기", findWord: "읽기", meanWord: "읽기", listenKana: "듣기", listenWord: "듣기" };
+const SKILL_TYPES = { 읽기: ["readKana", "findKana", "readWord", "findWord", "meanWord"], 듣기: ["listenKana", "listenWord"] };
 
 function options(answer, pool, field, nearJp) {
   const set = new Set([answer]);
@@ -102,6 +102,8 @@ function buildSession(skill, lessonIds) {
   return picked.map((it, i) => {
     let opts = TYPES[it.kind].filter(t => !allowed || allowed.includes(t));
     if (!canSpeak) opts = opts.filter(t => !t.startsWith("listen"));
+    // 너무 짧은 단어(1~2글자)는 잘 안 들려서 듣기 문제에서 제외
+    if ([...it.jp].length < 3 && opts.some(t => !t.startsWith("listen"))) opts = opts.filter(t => !t.startsWith("listen"));
     if (skill === "종합") {
       const want = i % 5 === 2 ? "듣기" : "읽기";
       const sub = opts.filter(t => SKILL[t] === want);
@@ -147,6 +149,9 @@ function ask() {
     case "readWord":
       html = `<div class="prompt word"><span>${it.jp}</span></div><p class="ask">이 단어를 읽어 보세요</p>`;
       answer = it.read; opts = options(answer, sameKind, "read"); break;
+    case "findWord":
+      html = `<div class="prompt sound"><span>${esc(it.read)}</span></div><p class="ask">이렇게 읽는 단어는? <span class="muted">(${esc(it.mean)})</span></p>`;
+      answer = it.jp; kanaOpts = "kanaw"; opts = options(answer, sameKind, "jp"); break;
     case "meanWord":
       html = `<div class="prompt word"><span>${it.jp}</span></div><p class="ask">무슨 뜻일까요?</p>`;
       answer = it.mean; opts = options(answer, pool.filter(p => p.mean), "mean"); break;
@@ -156,9 +161,9 @@ function ask() {
     case "speak": return askSpeak(it);
   }
   view.innerHTML = `<div class="card">${header()}${html}
-    <div class="opts">${opts.map((o, i) => `<button id="o${i}" class="${kanaOpts ? "kana" : ""}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>
+    <div class="opts">${opts.map((o, i) => `<button id="o${i}" class="${kanaOpts === true ? "kana" : kanaOpts || ""}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>
     <p class="feedback" id="fb"></p></div>`;
-  if (type.startsWith("listen")) { speak(it.jp); $("#play").onclick = () => speak(it.jp, 0.6); }
+  if (type.startsWith("listen")) { speak(it.jp, 0.7); $("#play").onclick = () => speak(it.jp, 0.55); }
   view.querySelectorAll(".opts button").forEach(b => b.onclick = () => {
     view.querySelectorAll(".opts button").forEach(x => { x.disabled = true; if (x.dataset.v === answer) x.classList.add("ok"); });
     const ok = b.dataset.v === answer;
@@ -240,7 +245,7 @@ function bindChips() {
 }
 
 function home() {
-  const all = items(), seen = all.filter(i => stats[i.key]);
+  const all = items().filter(i => i.kind !== "kana"), seen = all.filter(i => stats[i.key]);
   const tot = Object.values(stats).reduce((a, s) => [a[0] + s.c, a[1] + s.c + s.w], [0, 0]);
   const acc = tot[1] ? Math.round(tot[0] / tot[1] * 100) + "%" : "-";
   const weak = all.filter(i => isWeak(i.key)).slice(0, 12);
@@ -253,7 +258,7 @@ function home() {
       <div class="stat"><b>${acc}</b><span>정답률</span></div>
     </div>
     <div class="card"><h2>오늘의 복습</h2>
-      <p class="muted">읽기 위주에 듣기를 섞은 15문제. 틀렸던 것과 오래 안 본 것이 더 자주 나와요. 매번 새로 섞여요.</p>
+      <p class="muted">단어·표현으로 내는 15문제 (읽기 12 + 듣기 3). 틀렸던 것과 오래 안 본 것이 더 자주 나와요. 매번 새로 섞여요.</p>
       <button class="primary" id="go">복습 시작</button></div>
     ${weak.length ? `<div class="card"><h2>약한 글자·단어</h2><div class="miss">${weak.map(w => `<span>${w.jp}</span>`).join("")}</div></div>` : ""}
     <div class="card"><h2>배운 수업</h2>${L.map(l => `<p class="muted">${l.id}강 · ${esc(l.title)}</p>`).join("")}</div>`;
