@@ -280,7 +280,7 @@ function quizMenu() {
 function chart() {
   view.innerHTML = `<div><div class="eyebrow">글자를 누르면 발음이 나와요 · 빨간 점은 약한 글자</div><h1>글자표</h1></div>
     ${L.map(l => l.rows.map(r => `<div class="card"><h2>${r.name} <span class="muted">${l.id}강</span></h2>
-      <div class="cells">${r.kana.map(([k, s]) => `<div class="cell ${isWeak("k:" + k) ? "weak" : ""}" data-say="${k}" role="button" tabindex="0"><b>${k}</b><small>${s}</small></div>`).join("")}</div></div>`).join("")).join("")}`;
+      <div class="cells">${r.kana.map(([k, s]) => `<div class="cell ${isWeak("k:" + k) ? "weak" : ""} ${[...k].length > 1 ? "multi" : ""}" data-say="${k}" role="button" tabindex="0"><b>${k}</b><small>${s}</small></div>`).join("")}</div></div>`).join("")).join("")}`;
   view.querySelectorAll("[data-say]").forEach(c => c.onclick = () => speak(c.dataset.say));
 }
 
